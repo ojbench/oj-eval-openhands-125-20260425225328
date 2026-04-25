@@ -1,8 +1,8 @@
 
-#include <iostream>
+#include <cstdio>
 #include <vector>
-#include <unordered_map>
 #include <algorithm>
+#include <unordered_map>
 
 // Fast input function
 inline int readInt() {
@@ -16,20 +16,43 @@ inline int readInt() {
     return x;
 }
 
+// Union-Find with coordinate compression
 class UnionFind {
 private:
-    std::unordered_map<int, int> parent;
-    std::unordered_map<int, int> rank;
+    std::vector<int> parent;
+    std::vector<int> rank;
+    std::unordered_map<int, int> comp; // Coordinate compression map
+    int nextId;
 
 public:
-    int find(int x) {
-        // Iterative path compression
-        if (parent.find(x) == parent.end()) {
-            parent[x] = x;
-            rank[x] = 0;
-            return x;
+    UnionFind() : nextId(0) {
+        // Start with reasonable capacity
+        parent.reserve(2000000);
+        rank.reserve(2000000);
+    }
+
+    // Compress coordinate and return compressed id
+    int compress(int x) {
+        auto it = comp.find(x);
+        if (it != comp.end()) {
+            return it->second;
         }
         
+        int id = nextId++;
+        comp[x] = id;
+        
+        // Ensure vectors are large enough
+        if (id >= (int)parent.size()) {
+            parent.resize(id + 1);
+            rank.resize(id + 1);
+        }
+        
+        parent[id] = id;
+        rank[id] = 0;
+        return id;
+    }
+
+    int find(int x) {
         int root = x;
         while (parent[root] != root) {
             root = parent[root];
@@ -74,7 +97,7 @@ int main() {
 
         UnionFind uf;
         std::vector<std::pair<int, int>> inequalities;
-        inequalities.reserve(n); // Reserve space to avoid reallocations
+        inequalities.reserve(n);
 
         // Process all constraints
         for (int i = 0; i < n; i++) {
@@ -82,12 +105,16 @@ int main() {
             int b = readInt();
             int e = readInt();
 
+            // Compress coordinates
+            int ca = uf.compress(a);
+            int cb = uf.compress(b);
+
             if (e == 1) {
                 // Equality constraint: a == b
-                uf.unite(a, b);
+                uf.unite(ca, cb);
             } else {
                 // Inequality constraint: a != b
-                inequalities.push_back({a, b});
+                inequalities.push_back({ca, cb});
             }
         }
 
