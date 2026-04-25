@@ -4,6 +4,18 @@
 #include <unordered_map>
 #include <algorithm>
 
+// Fast input function
+inline int readInt() {
+    int x = 0;
+    char c = getchar();
+    while (c < '0' || c > '9') c = getchar();
+    while (c >= '0' && c <= '9') {
+        x = x * 10 + (c - '0');
+        c = getchar();
+    }
+    return x;
+}
+
 class UnionFind {
 private:
     std::unordered_map<int, int> parent;
@@ -11,15 +23,26 @@ private:
 
 public:
     int find(int x) {
+        // Iterative path compression
         if (parent.find(x) == parent.end()) {
             parent[x] = x;
             rank[x] = 0;
             return x;
         }
-        if (parent[x] != x) {
-            parent[x] = find(parent[x]);  // Path compression
+        
+        int root = x;
+        while (parent[root] != root) {
+            root = parent[root];
         }
-        return parent[x];
+        
+        // Path compression
+        while (parent[x] != x) {
+            int next = parent[x];
+            parent[x] = root;
+            x = next;
+        }
+        
+        return root;
     }
 
     void unite(int x, int y) {
@@ -44,23 +67,20 @@ public:
 };
 
 int main() {
-    std::ios::sync_with_stdio(false);
-    std::cin.tie(nullptr);
-
-    int t;
-    std::cin >> t;
+    int t = readInt();
 
     while (t--) {
-        int n;
-        std::cin >> n;
+        int n = readInt();
 
         UnionFind uf;
         std::vector<std::pair<int, int>> inequalities;
+        inequalities.reserve(n); // Reserve space to avoid reallocations
 
         // Process all constraints
         for (int i = 0; i < n; i++) {
-            int a, b, e;
-            std::cin >> a >> b >> e;
+            int a = readInt();
+            int b = readInt();
+            int e = readInt();
 
             if (e == 1) {
                 // Equality constraint: a == b
@@ -80,7 +100,15 @@ int main() {
             }
         }
 
-        std::cout << (valid ? "YES" : "NO") << '\n';
+        if (valid) {
+            putchar('Y');
+            putchar('E');
+            putchar('S');
+        } else {
+            putchar('N');
+            putchar('O');
+        }
+        putchar('\n');
     }
 
     return 0;
